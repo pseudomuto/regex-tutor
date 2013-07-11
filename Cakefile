@@ -19,6 +19,14 @@ config =
 		{ src: "vendor/bootstrap/img/glyphicons-halflings.png", dest: "build/bootstrap/img/glyphicons-halflings.png" },
 		{ src: "vendor/bootstrap/js/bootstrap.min.js", dest: "build/bootstrap/js/bootstrap.min.js" },
 
+		# jasmine
+		{ src: "vendor/jasmine/boot.js", dest: "build/jasmine/boot.js" },
+		{ src: "vendor/jasmine/jasmine-html.js", dest: "build/jasmine/jasmine-html.js" },
+		{ src: "vendor/jasmine/jasmine.css", dest: "build/jasmine/jasmine.css" },
+		{ src: "vendor/jasmine/jasmine.js", dest: "build/jasmine/jasmine.js" },
+		{ src: "vendor/jasmine/jasmine_favicon.png", dest: "build/jasmine/jasmine_favicon.png" },
+		{ src: "vendor/jasmine/runner.html", dest: "build/jasmine/runner.html" },
+
 		# lib files
 		{ src: "lib/styles/main.css", dest: "build/styles/main.css" }
 		{ src: "lib/index.html", dest: "build/index.html" }
@@ -63,6 +71,12 @@ build = (watch, callback) ->
 task "build", "compile project", ->
 	build ->
 		log "Done", green
+
+task "test", "compile and run jasmine tests", ->
+	build ->
+		log "Done...opening spec runner...", green
+		log __dirname, bold
+		require('openurl').open "file:///#{__dirname}/build/jasmine/runner.html"
 
 task "watch", "compile project and watch folder", ->
 	build true, ->
