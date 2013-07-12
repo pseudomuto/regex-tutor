@@ -1,6 +1,11 @@
-fs = require 'fs'
 path = require 'path'
 {spawn, exec} = require 'child_process'
+
+try
+	fs = require 'fs.extra'
+catch e
+	fs = require 'fs'
+
 
 bold = `'\033[0;1m'`
 green = `'\033[0;32m'`
@@ -9,24 +14,8 @@ red = `'\033[0;31m'`
 
 config = 
 	destDir: "build",
-	srcDir: "lib",
-	requiredDirs: [ "build/bootstrap" ]
-	staticResources: [
-		# bootstrap
-		{ src: "vendor/bootstrap/css/bootstrap.min.css", dest: "build/bootstrap/css/bootstrap.min.css" },
-		{ src: "vendor/bootstrap/css/bootstrap-responsive.min.css", dest: "build/bootstrap/css/bootstrap-responsive.min.css" },
-		{ src: "vendor/bootstrap/img/glyphicons-halflings-white.png", dest: "build/bootstrap/img/glyphicons-halflings-white.png" },
-		{ src: "vendor/bootstrap/img/glyphicons-halflings.png", dest: "build/bootstrap/img/glyphicons-halflings.png" },
-		{ src: "vendor/bootstrap/js/bootstrap.min.js", dest: "build/bootstrap/js/bootstrap.min.js" },
-
-		# jasmine
-		{ src: "vendor/jasmine/boot.js", dest: "build/jasmine/boot.js" },
-		{ src: "vendor/jasmine/jasmine-html.js", dest: "build/jasmine/jasmine-html.js" },
-		{ src: "vendor/jasmine/jasmine.css", dest: "build/jasmine/jasmine.css" },
-		{ src: "vendor/jasmine/jasmine.js", dest: "build/jasmine/jasmine.js" },
-		{ src: "vendor/jasmine/jasmine_favicon.png", dest: "build/jasmine/jasmine_favicon.png" },
-		{ src: "vendor/jasmine/runner.html", dest: "build/jasmine/runner.html" },
-
+	srcDir: "lib"
+	staticResources: [		
 		# lib files
 		{ src: "lib/styles/main.css", dest: "build/styles/main.css" }
 		{ src: "lib/index.html", dest: "build/index.html" }
@@ -54,19 +43,23 @@ build = (watch, callback) ->
 
 	launch "coffee", options, ->
 		# move vendor and other static files over
-		fs.mkdir config.destDir, ->
-			for dir in config.requiredDirs
-				fs.mkdirSync dir if not fs.existsSync dir
+		fs.copyRecursive "vendor/bootstrap", "build/bootstrap", ->
+			fs.copyRecursive "vendor/jasmine", "build/jasmine", ->		
+				for resource in config.staticResources
+					fs.mkdirpSync path.dirname(resource.dest)
+					if fs.existsSync resource.dest
+				 		fs.unlinkSync resource.dest
 
-			for resource in config.staticResources
-				# log "#{resource.src} => #{resource.dest}", red
-				if fs.existsSync resource.dest
-					fs.unlinkSync resource.dest
+					fs.linkSync resource.src, resource.dest
 
-				fs.mkdirSync path.dirname(resource.dest) if not fs.existsSync path.dirname(resource.dest)
-				fs.linkSync resource.src, resource.dest
+				# pesky -p folder on Windows				
+				fs.rmdir "-p", ->
+					callback?()
 
-			callback?()
+task "init", "initialize/update environment", ->
+	log "Initializing workspace...", bold
+	launch "npm", [ "install" ], ->
+		log "Environment has been initialized.", green
 
 task "build", "compile project", ->
 	build ->
