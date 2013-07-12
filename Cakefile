@@ -6,7 +6,6 @@ try
 catch e
 	fs = require 'fs'
 
-
 bold = `'\033[0;1m'`
 green = `'\033[0;32m'`
 reset = `'\033[0m'`
@@ -43,18 +42,17 @@ build = (watch, callback) ->
 
 	launch "coffee", options, ->
 		# move vendor and other static files over
-		fs.copyRecursive "vendor/bootstrap", "build/bootstrap", ->
-			fs.copyRecursive "vendor/jasmine", "build/jasmine", ->		
-				for resource in config.staticResources
-					fs.mkdirpSync path.dirname(resource.dest)
-					if fs.existsSync resource.dest
-				 		fs.unlinkSync resource.dest
+		fs.copyRecursive "vendor", "build/vendor", ->			
+			for resource in config.staticResources
+				fs.mkdirpSync path.dirname(resource.dest)
+				if fs.existsSync resource.dest
+			 		fs.unlinkSync resource.dest
 
-					fs.linkSync resource.src, resource.dest
+				fs.linkSync resource.src, resource.dest
 
-				# pesky -p folder on Windows				
-				fs.rmdir "-p", ->
-					callback?()
+			# pesky -p folder on Windows				
+			fs.rmdir "-p", ->
+				callback?()
 
 task "init", "initialize/update environment", ->
 	log "Initializing workspace...", bold
@@ -69,7 +67,7 @@ task "test", "compile and run jasmine tests", ->
 	build ->
 		log "Done...opening spec runner...", green
 		log __dirname, bold
-		require('openurl').open "file:///#{__dirname}/build/jasmine/runner.html"
+		require('openurl').open "file:///#{__dirname}/build/vendor/jasmine/runner.html"
 
 task "watch", "compile project and watch folder", ->
 	build true, ->
